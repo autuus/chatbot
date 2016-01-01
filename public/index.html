@@ -1,0 +1,321 @@
+<head>
+<title>FIMK exchange</title>
+<script src="jquery.min.js"></script>
+<script src="https://raw.githubusercontent.com/ajaxorg/ace-builds/master/src-noconflict/ace.js"></script>
+<script src="termlib_min.js"></script>
+<script>
+function say(s) {
+    if (typeof s == "undefined") {
+        s = "I am confused.";
+    }
+    $("#speak").html("<br>"+s);
+    $('#chat_box').val('');
+    
+    if (s.length < 100) {
+        $("div.speech").css('width','200px');
+        $("div.speech").css('left','100px');
+    } else {
+        $("div.speech").css('width','500px');
+        $("div.speech").css('left','250px');
+    }
+}
+
+function setOptions(options) {
+    var html = "";
+
+    if (typeof options !== "undefined") {
+        for (var key in options) {
+            html += "<div class=\"selector\"";
+
+            if (typeof options[key].value !== "undefined") {
+                html += " value='"+options[key].value+"'";
+            }
+
+            html += ">" + options[key].option + "</div>";
+        }
+    }
+
+
+    $("#options").html(html);
+    activateSelectors();
+}
+
+function setCaption(cap) {
+    if (typeof cap == "undefined") {
+        cap = "";
+    }
+    $("#chat_box").val(cap);
+}
+
+function setFace(face) {
+  if (typeof face == "undefined") {
+      face = "hal";
+  }
+  $("#face_image").attr('src','face/'+face+'.png');
+}
+
+function setChatbox(input) {
+    if (input == "hide") {
+        $("#chat_box").css('display', 'none');
+        $("#chat_button").css('display', 'none');
+    } else {
+        $("#chat_box").css('display', 'inline');
+        $("#chat_button").css('display', 'inline');
+    }
+}
+
+var thinking = false;
+var timer;
+function sendInput(input) {
+    say('* thinking *');
+    thinking = true;
+    timer = setTimeout(function() {
+        if (thinking) {
+          say('I was lost in thought.. Refresh the page?');
+        }
+    }, 10000);
+    $.post( "/chat", {message: input },
+          function(ret) {
+              thinking = false;
+              clearTimeout(timer);
+              ret = $.parseJSON(ret);
+              if (ret === null) {
+                say('The server sent an invalid response, this might be the end '
+                + 'of me, since the server is my capacity to think. <br>'
+                + 'Please click on me, and see if i regain conciousness.');
+              } else {
+                  say(ret.say);
+                  setOptions(ret.options);
+                  setCaption(ret.caption);
+                  setFace(ret.face);
+                  setChatbox(ret.input);
+                  if (editor) {
+                      editor.setValue(ret.edit);
+                  }
+                  console.log(ret);
+              }
+          }
+    );
+}
+function activateSelectors() {
+    $('.selector').click(function() {
+        if (typeof $(this).attr("value") !== "undefined") {
+            sendInput($(this).attr("value"));
+        }
+        sendInput($(this).html());
+    });
+}
+
+var topright = new Image();
+var topleft = new Image();
+var bottomright = new Image();
+var bottomleft = new Image();
+topright.src = 'topright.png';
+topleft.src = 'topleft.png';
+bottomright.src = 'bottomright.png';
+bottomleft.src = 'bottomleft.png';
+
+function drawBubble() {
+
+    var c=document.getElementById("bubbler");
+    var ctx=c.getContext("2d");
+    ctx.drawImage(topleft, 0, 0);
+    ctx.drawImage(topright, 200, 0);
+    ctx.drawImage(bottomleft, 0, 200);
+    ctx.drawImage(bottomright, 200, 200);
+}
+
+function faceClick() {
+    sendInput('*user enters the server*');
+}
+
+var editor;
+
+$(document).ready(function() {
+    activateSelectors();
+    $('#chat_box').click(function() {
+        $('#chat_box').val('');
+    });
+	$('#chat_box').keypress(function(event){
+	    	var keycode = (event.keyCode ? event.keyCode : event.which);
+	    	if(keycode == '13'){
+                sendInput($('#chat_box').val());
+	    	}
+	});
+    sendInput('*user enters the server*');
+    
+    /*
+    editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.getSession().setMode("ace/mode/javascript");
+    
+    var term = new Terminal( { handler: termHandler} );
+    term.open();
+
+    function termHandler() {
+         this.newLine();
+         var line = this.lineBuffer;
+         if (line !== "") {
+            this.write("You typed: "+line);
+         }
+         this.prompt();
+    }*/
+});
+</script>
+<style>
+/* first for IE 4–8 */
+@font-face {
+  font-family: DINWebPro-Light;
+  src: url("DINWebPro-Light.eot");
+}
+
+/* then for WOFF-capable browsers */
+@font-face {
+  font-family: DINWebPro-Light;
+  src: url("DINWebPro-Light.woff") format("woff");
+}
+#bg-image {
+    position:absolute;
+    top:0px;
+    left:0px;
+    z-index:-1;
+}
+
+#bg-image img {
+  width:100%;
+  height:100%;
+}
+body {
+	font-family: Arial, Helvetica, sans-serif;
+	
+    background-image: url(http://jorgebernales.files.wordpress.com/2010/05/finnish_nature_1920.jpg);
+    background-repeat: no-repeat;
+    background-size: 100%;
+/* font-family: DINWebPro-Light, sans-serif;
+    /*background-image: url('http://i653.photobucket.com/albums/uu257/44mduncan/relaxing_wallpaper_beach_full.jpg');
+    background-color: black;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;*/
+}
+
+table {
+    text-align: center;
+    font-size: 12px;
+}
+
+td {
+    vertical-align:top;
+}
+
+div.speech
+{
+    text-align: center;
+    font-size: 12px;
+
+	position: relative;
+	top:-30px;
+	left:100px;
+	width: 500px;
+	height: 100px;
+	background-color: #fff;
+	border: 8px solid #000;
+	-webkit-border-radius: 30px;
+	-moz-border-radius: 30px;
+	border-radius: 30px;
+	-webkit-box-shadow: 2px 2px 4px #000;
+	-moz-box-shadow: 2px 2px 4px #000;
+	box-shadow: 2px 2px 4px #000;
+}
+
+div.speech:before
+{
+	content: ' ';
+	position: absolute;
+	width: 0;
+	height: 0;
+	left: 30px;
+	top: 100px;
+	border: 25px solid;
+	border-color: #000 transparent transparent #000;
+}
+
+div.speech:after
+{
+	content: ' ';
+	position: absolute;
+	width: 0;
+	height: 0;
+	left: 38px;
+	top: 100px;
+	border: 15px solid;
+	border-color: #fff transparent transparent #fff;
+}
+input {
+    background-color: white;
+    border: 1px solid;
+    height: 20px;
+    width: 160px;
+    box-shadow:inset 0 0 3px 3px #aaa;
+    color: black;
+    display:inline;
+}
+
+.selector2 {
+    border: 0px solid;
+    height: 5px;
+}
+.selector {
+    border: 0px solid;
+    height: 20px;
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    cursor: hand;
+}
+.selector:hover
+{
+    background-color: darkblue;
+    cursor: hand;
+}
+
+    #editor { 
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width:540px;
+        height:100%;
+    }
+</style>
+</head>
+<body bgcolor=black text="#000000" link="#0000FF">
+<!-- canvas id="canvas" style="position:absolute; top:0px; right:0px; z-index:-100;width:100%;height:100%"></canvas -->
+<center>
+<br>
+<br>
+<br>
+<div id="frame">
+    <div class="speech" id="speak"><br>Please fix your javascript, I need it to think.</div>
+</div>
+<img src="face/ask.png" style="display:none">
+<img src="face/talk.png" style="display:none">
+<img id="face_image" width=150 onclick="faceClick()" src="face/kekkonen.png"><br>
+<input type="text" value="Say.." id="chat_box">
+<img id="chat_button" style="position:relative;display:inline;left:-23px; top:3px" onclick="sendInput($('#chat_box').val())"
+  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAABrVBMVEUAAAATsRUayhsctxwzzDMbxRsgzSEkuCREREBEREBEREAbxxwfuSAmnCVEREBEREAaxRsWrxYfpx8YwRkRuhETpRMcqhxEREAWvRcOqw4TmhNCQj5EREATtxQPkQ4ThhMUrxUAiQASqRIAiQAPpBAAigAAgQAJpAkCkQIAhAAInggIjQgBhwEAbQAFmQUJgAgHgQcCkgIJggkVbxQCkQIFiAUKewoAigAAkAAEhAMuTywa2xsb3xwb3hwZ1RoY1hkZ2BoZ1BocxBwbvRsbuxsW0RcXzxgbwhsYvBkTxBMQwRAUyRQZvRkauhkYuhgTwxMQwREOvQ8NuA0LtAsVuxUXtRgWtxcRwBIPwBANuQ0LtQwJsAoJqgkMnAwTtBMUsRQQvBAOvA8Nug4Mtw0JqwkMnQwMmAwJlQkDmAMQrxENtg4MtgwKsgoJrwkKlgkCmgIAlgALsAoKsQoJrgkIrAgIqAgMmAsCmAIHqwgHqgcGqAcHpQcMmgsLlgsJlQgFpAUFpQUEowUFoQUKlgkKkwoCngICngMDnAMJkwgJjQkAlwAAmAABlgEHjgcBlQE7NirzAAAAO3RSTlMAuvijBfX3egEJCvXvaBIC9dwx9f6+EgP0+5sbFPTzbvR79IT07FP09nL0/J8H9Mwh9OJU9PiHu/aoD72/5FcAAAAJcEhZcwAAAEgAAABIAEbJaz4AAADgSURBVBjTY2BgZGJmYUAGrNY2bOwcnFycHFABbmtbazseXj5+MA8oKmDv4Ojk7CIoBOLzczIwCLu6uTt7eHqJiIoxiPNxMTBIePv4+vkHBAYFS0pJywBVyIaEhoVHBEZGRcfEyskDzVCIi09ITEoOjk5JTUvPUGRgUMrMSs4OzsmNSU3Lyy9QZmBQKSwqii4uKY0tyytXVQPapF5RUVFZVV1TW6ehCXaKVn1DfWNTc4u2ji7EpXqtba3tHZ36BjCXGnZ19/QaGYszwFxq0tVnagb1CT/IpeYWllZQn4L8DADi8TBfXUEUAwAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxMy0wNi0wMlQwMDoxNjozMS0wNTowMFySbAAAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTMtMDYtMDJUMDA6MTY6MzEtMDU6MDAtz9S8AAAAAElFTkSuQmCC" />
+<div class="selector2"></div>
+<div id="options" style="height:150px">
+</div>
+<br>
+<iframe width="560" height="315" src="//www.youtube.com/embed/JaSb-HpTY_c" frameborder="0" allowfullscreen></iframe>
+</center>
+Bitcoin reserve <a href="https://blockchain.info/address/12mc1sqkXEGFnCVazRddXvd8dGpf5gNB9n">https://blockchain.info/address/12mc1sqkXEGFnCVazRddXvd8dGpf5gNB9n</a>
+<div id="editor"></div>
+
+<div id="terminal"></div>
+
+
+</body>
+<!-- div id="bg-image"><img src=''></div ->
+</center>
+</body>

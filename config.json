@@ -1,0 +1,17 @@
+{
+    "devmode" : true,
+    "port" : "84",
+    "exchange" : {
+        "bitcoin_address" : "1N1HvwVbDddJB8G4wJZ482iKejarSNnPhy",
+        "fimk_address" : "FIM-L6YV-3DKL-2RL7-6CKCT",
+        "email" : "konsta.gogoljuk@gmail.com",
+        "fee" : "3.5%",
+        "bank": {
+            "address": "FI23 2145 2004 0020 83",
+            "receiver": "Stem OY",
+            "bic": "NDEAFIHH",
+            "fee" : "3.5%"
+        }
+    },
+    "admin" : "admin@fitcoin.fi"
+}
